@@ -7,6 +7,12 @@
 template<typename T>
 class Pika_Q {
 public:
+
+  /*
+  *   Extra capacity slot allows for distinction between empty
+  *   and full states for the queue.
+  */
+
   explicit Pika_Q(size_t capacity)
     : m_buffer(capacity + 1),
       m_capacity(capacity + 1),
@@ -23,6 +29,10 @@ public:
     size_t tail = m_tail.load(std::memory_order_relaxed);
     size_t next_tail = tail + 1;
     
+    /*
+    *   Modulo operator can be costly.
+    */
+
     if(next_tail == m_capacity) {
       next_tail = 0;
     }
@@ -76,6 +86,13 @@ public:
   } 
 
 private:
+
+  /*
+  *   Attempts to get size of machine's cache lines
+  *   aligning head and tail pointers on separate cache lines
+  *   to prevent false sharing.
+  */
+
   #ifdef __cpp_lib_hardware_interference_size
     static constexpr size_t cache_line_size = std::hardware_destructive_interference_size;
   #else
