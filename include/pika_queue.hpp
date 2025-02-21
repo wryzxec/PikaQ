@@ -1,10 +1,9 @@
 #ifndef pika_queue_hpp
 #define pika_queue_hpp
 #include <atomic>
-#include <vector>
 #include <new>
 
-template<typename T>
+template<typename T, size_t capacity>
 class Pika_Q {
 public:
 
@@ -13,10 +12,8 @@ public:
   *   and full states for the queue.
   */
 
-  explicit Pika_Q(size_t capacity)
-    : m_buffer(capacity + 1),
-      m_capacity(capacity + 1),
-      m_head(0), m_tail(0),
+  Pika_Q()
+    : m_head(0), m_tail(0),
       m_head_cached(0),
       m_tail_cached(0) {}
     
@@ -96,11 +93,11 @@ private:
   #ifdef __cpp_lib_hardware_interference_size
     static constexpr size_t cache_line_size = std::hardware_destructive_interference_size;
   #else
-    static constexpr size_t cache_line_size = 64;
+    static constexpr size_t cache_line_size = 64; // default
   #endif
 
-  std::vector<T> m_buffer;
-  size_t m_capacity;
+  static constexpr size_t m_capacity = capacity + 1;
+  alignas(cache_line_size) T m_buffer[m_capacity];
     
   alignas(cache_line_size) std::atomic<size_t> m_head;
   alignas(cache_line_size) std::atomic<size_t> m_tail;
