@@ -1,5 +1,6 @@
 #include <cassert>
 #include <gtest/gtest.h>
+#include <string>
 #include "../include/pika_queue.hpp"
 
 TEST(spsc_queue_test, starts_empty) {
@@ -100,6 +101,20 @@ TEST(spsc_queue_test, test_wrap_around) {
   EXPECT_EQ(val, 5);
   q.pop(val);
   EXPECT_EQ(val, 6);
+}
+
+TEST(spsc_queue_test, test_string_elems) {
+  Pika_Q<std::string> q(4);
+  
+  EXPECT_TRUE(q.push("hello"));
+  EXPECT_TRUE(q.push("world"));
+
+  std::string val {};
+  q.pop(val);
+  EXPECT_EQ(val, "hello");
+  
+  q.pop(val);
+  EXPECT_EQ(val, "world");
 }
 
 int main(int argc, char** argv) {
