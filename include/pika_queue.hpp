@@ -2,8 +2,10 @@
 #define pika_queue_hpp
 #include <atomic>
 #include <new>
+#include <utility>
+#include <memory>
 
-template<typename T, size_t capacity>
+template<typename T>
 class Pika_Q {
 public:
 
@@ -12,8 +14,11 @@ public:
   *   and full states for the queue.
   */
 
-  Pika_Q()
-    : m_head(0), m_tail(0),
+  explicit Pika_Q(size_t capacity)
+    : m_capacity(capacity + 1),
+      m_buffer(new T[m_capacity]),
+      m_head(0),
+      m_tail(0),
       m_head_cached(0),
       m_tail_cached(0) {}
     
@@ -56,7 +61,7 @@ public:
       }
     }
 
-    item = m_buffer[head];
+    item = std::move(m_buffer[head]);
     size_t next_head = head + 1;
     if(next_head == m_capacity) {
       next_head = 0;
@@ -96,8 +101,8 @@ private:
     static constexpr size_t cache_line_size = 64; // default
   #endif
 
-  static constexpr size_t m_capacity = capacity + 1;
-  alignas(cache_line_size) T m_buffer[m_capacity];
+  size_t m_capacity;
+  std::unique_ptr<T[]> m_buffer;
     
   alignas(cache_line_size) std::atomic<size_t> m_head;
   alignas(cache_line_size) std::atomic<size_t> m_tail;
