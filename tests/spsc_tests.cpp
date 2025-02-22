@@ -4,13 +4,13 @@
 #include "../include/pika_queue.hpp"
 
 TEST(spsc_queue_test, starts_empty) {
-  Pika_Q<int> q(4);
+  Pika_Q<int, 4> q;
   EXPECT_TRUE(q.empty());
   EXPECT_EQ(q.size(), 0);
 }
 
 TEST(spsc_queue_test, push_pop_single) {
-  Pika_Q<int> q(4);
+  Pika_Q<int, 4> q;
   EXPECT_TRUE(q.push(2));
   int val;
   EXPECT_TRUE(q.pop(val));
@@ -18,7 +18,7 @@ TEST(spsc_queue_test, push_pop_single) {
 }
 
 TEST(spsc_queue_test, push_till_full) {
-  Pika_Q<int> q(4);
+  Pika_Q<int, 4> q;
   
   EXPECT_TRUE(q.push(1));
   EXPECT_TRUE(q.push(2));
@@ -30,7 +30,7 @@ TEST(spsc_queue_test, push_till_full) {
 }
 
 TEST(spsc_queue_test, pop_until_empty) {
-  Pika_Q<int> q(4);
+  Pika_Q<int, 4> q;
   q.push(1); q.push(2); q.push(3); q.push(4);
 
   int val {};
@@ -51,7 +51,7 @@ TEST(spsc_queue_test, pop_until_empty) {
 }
 
 TEST(spsc_queue_test, test_size) {
-  Pika_Q<int> q(4);
+  Pika_Q<int, 4> q;
   
   q.push(1);
   EXPECT_EQ(q.size(), 1);
@@ -84,7 +84,7 @@ TEST(spsc_queue_test, test_size) {
 }
 
 TEST(spsc_queue_test, test_wrap_around) {
-  Pika_Q<int> q(4);
+  Pika_Q<int, 4> q;
   
   q.push(1); q.push(2); q.push(3); q.push(4);
 
@@ -104,7 +104,7 @@ TEST(spsc_queue_test, test_wrap_around) {
 }
 
 TEST(spsc_queue_test, test_string_elems) {
-  Pika_Q<std::string> q(4);
+  Pika_Q<std::string, 4> q;
   
   EXPECT_TRUE(q.push("hello"));
   EXPECT_TRUE(q.push("world"));
