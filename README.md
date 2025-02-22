@@ -5,7 +5,7 @@
 A lightning fast, single-producer single-consumer (SPSC) queue, written in C++.
 
 View all the details of the project 
-[**HERE**](https://wryzxec.github.io/https://wryzxec.github.io/lockfree_spsc.html)
+[**HERE**](https://wryzxec.github.io/lockfree_spsc.html)
 
 </div>
 
