@@ -3,6 +3,8 @@
 #include <atomic>
 #include <vector>
 #include <new>
+#include <utility>
+#include <memory>
 
 template<typename T>
 class Pika_Q {
@@ -14,9 +16,10 @@ public:
   */
 
   explicit Pika_Q(size_t capacity)
-    : m_buffer(capacity + 1),
-      m_capacity(capacity + 1),
-      m_head(0), m_tail(0),
+    : m_capacity(capacity + 1),
+      m_buffer(new T[m_capacity]),
+      m_head(0),
+      m_tail(0),
       m_head_cached(0),
       m_tail_cached(0) {}
     
@@ -60,7 +63,7 @@ public:
       }
     }
 
-    item = m_buffer[head];
+    item = std::move(m_buffer[head]);
     size_t next_head = head + 1;
     if(next_head == m_capacity) {
       next_head = 0;
@@ -100,8 +103,8 @@ private:
     static constexpr size_t cache_line_size = 64;
   #endif
 
-  std::vector<T> m_buffer;
   size_t m_capacity;
+  std::unique_ptr<T[]> m_buffer;
     
   alignas(cache_line_size) std::atomic<size_t> m_head;
   alignas(cache_line_size) std::atomic<size_t> m_tail;
