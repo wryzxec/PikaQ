@@ -3,6 +3,7 @@
 #include <iostream>
 #include <vector>
 #include <numeric>
+#include <functional>
 
 #include "../include/pika_queue.hpp"
 #include <boost/lockfree/spsc_queue.hpp>
@@ -114,7 +115,7 @@ double folly_q_benchmark() {
     return std::chrono::duration<double>(end - start).count();
 }
 
-double run_average_benchmark(const std::string& label, double (*benchmark_func)()) {
+double run_average_benchmark(const std::function<double()>& benchmark_func) {
     std::vector<double> run_times;
 
     for (int i = 0; i < NUM_RUNS; ++i) {
@@ -131,17 +132,17 @@ int main() {
     double ops = 2.0 * static_cast<double>(NUM_ITERS);
 
     std::cout << "-- Pika_Q --\n";
-    double avg_time_pika = run_average_benchmark("Pika_Q", pika_q_benchmark) * 1000;
+    double avg_time_pika = run_average_benchmark(pika_q_benchmark) * 1000;
     double throughput_pika = ops / avg_time_pika;
     std::cout << "Average Throughput    : " << throughput_pika << " ops/ms\n\n";
 
     std::cout << "-- Boost_Q --\n";
-    double avg_time_boost = run_average_benchmark("Boost_Q", boost_q_benchmark) * 1000;
+    double avg_time_boost = run_average_benchmark(boost_q_benchmark) * 1000;
     double throughput_boost = ops / avg_time_boost;
     std::cout << "Average Throughput    : " << throughput_boost << " ops/ms\n\n";
 
     std::cout << "-- Folly_Q --\n";
-    double avg_time_folly = run_average_benchmark("Folly_Q", folly_q_benchmark) * 1000;
+    double avg_time_folly = run_average_benchmark(folly_q_benchmark) * 1000;
     double throughput_folly = ops / avg_time_folly;
     std::cout << "Average Throughput    : " << throughput_folly << " ops/ms\n\n";
 }
