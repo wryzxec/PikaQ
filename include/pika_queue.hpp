@@ -16,11 +16,21 @@ public:
 
   explicit Pika_Q(size_t capacity)
     : m_capacity(capacity + 1),
+      // ::operator new[] simply allocates memory, no default object construction.
       m_buffer(static_cast<T*>(::operator new[](m_capacity * sizeof(T)))),
       m_head(0),
       m_tail(0),
       m_head_cached(0),
-      m_tail_cached(0) {}
+      m_tail_cached(0) {
+      
+      if(capacity == 0) {
+        throw std::invalid_argument("Queue capacity must be greater than zero.");
+      }
+
+      if(capacity == std::numeric_limits<size_t>::max()) {
+        throw std::overflow_error("Queue capacity overflow, ensure capacity does not exceed std::numeric_limits<size_t>::max()) - 1");
+      }
+  }
     
   Pika_Q& operator=(const Pika_Q&) = delete;
   Pika_Q(const Pika_Q&) = delete;
@@ -41,6 +51,10 @@ public:
     size_t tail = m_tail.load(std::memory_order_relaxed);
     size_t next_tail = tail + 1;
     
+    /*
+    *   Modulo operator can be costly.
+    */
+
     if(next_tail == m_capacity) {
       next_tail = 0;
     }
@@ -52,7 +66,7 @@ public:
       }
     }
 
-    m_buffer[tail] = item;
+    new(&m_buffer[tail]) T(item);
     m_tail.store(next_tail, std::memory_order_release);
     return true;
   }
@@ -72,9 +86,10 @@ public:
       if(next_tail == m_head_cached) {
         return false;
       }
-    }  
-    m_tail.store(next_tail, std::memory_order_release);
+    }
+
     new(&m_buffer[tail]) T(std::forward<Args>(args)...);
+    m_tail.store(next_tail, std::memory_order_release);
     return true;
   }  
 
@@ -87,10 +102,12 @@ public:
         return false;
       }
     }
+    
+    item = std::move(m_buffer[head]);
 
+    // safely call objects destructor
     std::destroy_at(&m_buffer[head]);
 
-    item = std::move(m_buffer[head]);
     size_t next_head = head + 1;
     if(next_head == m_capacity) {
       next_head = 0;
