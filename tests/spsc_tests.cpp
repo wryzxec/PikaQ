@@ -117,6 +117,34 @@ TEST(spsc_queue_test, test_string_elems) {
   EXPECT_EQ(val, "world");
 }
 
+class Obj {
+public:
+  Obj(std::string s, int i) : label(s), val(i) {}
+  
+  std::string label;
+  int val;
+};
+
+TEST(spsc_queue_test, test_emplace) {
+  Pika_Q<Obj> q(4);
+
+  ASSERT_TRUE(q.emplace("hello", 1));
+  ASSERT_TRUE(q.emplace("world", 2));
+  
+  Obj ob("empty", 0);
+  
+  ASSERT_TRUE(q.pop(ob));
+  EXPECT_EQ(ob.label, "hello");
+  EXPECT_EQ(ob.val, 1);
+  
+  ASSERT_TRUE(q.pop(ob));
+  EXPECT_EQ(ob.label, "world");
+  EXPECT_EQ(ob.val, 2);
+
+
+  ASSERT_TRUE(q.empty());
+}
+
 int main(int argc, char** argv) {
   testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
