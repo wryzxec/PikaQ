@@ -22,6 +22,10 @@ View all the details of the project
 
   pop the first item in the queue and stores it in `item`
 
+- `bool emplace(Args&&... args)`
+
+  constructs an object of type `T` in place within the queue
+
 - `bool full()`
 
   returns `true` if queue is full, `false` otherwise

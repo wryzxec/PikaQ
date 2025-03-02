@@ -17,7 +17,7 @@ public:
 
   explicit Pika_Q(size_t capacity)
     : m_capacity(capacity + 1),
-      m_buffer(new T[m_capacity]),
+      m_buffer(static_cast<T*>(::operator new[](m_capacity * sizeof(T)))),
       m_head(0),
       m_tail(0),
       m_head_cached(0),
@@ -26,7 +26,17 @@ public:
   Pika_Q& operator=(const Pika_Q&) = delete;
   Pika_Q(const Pika_Q&) = delete;
 
-  ~Pika_Q() = default;
+  ~Pika_Q() {
+    size_t head = m_head.load(std::memory_order_relaxed);
+    size_t tail = m_tail.load(std::memory_order_relaxed);
+
+    while(head != tail) {
+      std::destroy_at(&m_buffer[head]);
+      head = (head + 1) % m_capacity;
+    }
+
+    ::operator delete[](m_buffer);
+  }
 
   bool push(const T& item) {
     size_t tail = m_tail.load(std::memory_order_relaxed);
@@ -52,6 +62,27 @@ public:
     m_tail.store(next_tail, std::memory_order_release);
     return true;
   }
+  
+  template<typename... Args>
+  bool emplace(Args&&... args) {
+    
+    size_t tail = m_tail.load(std::memory_order_relaxed);
+    size_t next_tail = tail + 1;
+
+    if(next_tail == m_capacity){
+      next_tail = 0;
+    }
+    
+    if(next_tail == m_head_cached) {
+      m_head_cached = m_head.load(std::memory_order_acquire);
+      if(next_tail == m_head_cached) {
+        return false;
+      }
+    }  
+    m_tail.store(next_tail, std::memory_order_release);
+    new(&m_buffer[tail]) T(std::forward<Args>(args)...);
+    return true;
+  }  
 
   bool pop(T& item) {
     size_t head = m_head.load(std::memory_order_relaxed);
@@ -62,6 +93,8 @@ public:
         return false;
       }
     }
+
+    std::destroy_at(&m_buffer[head]);
 
     item = std::move(m_buffer[head]);
     size_t next_head = head + 1;
@@ -104,7 +137,7 @@ private:
   #endif
 
   size_t m_capacity;
-  std::unique_ptr<T[]> m_buffer;
+  T* m_buffer;
     
   alignas(cache_line_size) std::atomic<size_t> m_head;
   alignas(cache_line_size) std::atomic<size_t> m_tail;
