@@ -1,7 +1,6 @@
-#ifndef pika_queue_hpp
-#define pika_queue_hpp
+#pragma once
+
 #include <atomic>
-#include <vector>
 #include <new>
 #include <utility>
 #include <memory>
@@ -157,5 +156,3 @@ private:
   alignas(cache_line_size) size_t m_head_cached;
   alignas(cache_line_size) size_t m_tail_cached;
 };
-
-#endif
